@@ -35,9 +35,9 @@ config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
 config :dasher, Dasher.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
+  adapter: Ecto.Adapters.MySQL,
+  username: "root",
+  password: "",
   database: "dasher_dev",
-  hostname: "localhost",
+  hostname: "shopify.railgun",
   pool_size: 10

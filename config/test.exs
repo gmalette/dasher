@@ -11,9 +11,9 @@ config :logger, level: :warn
 
 # Configure your database
 config :dasher, Dasher.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
+  adapter: Ecto.Adapters.MySQL,
+  username: "root",
+  password: "",
   database: "dasher_test",
-  hostname: "localhost",
+  hostname: "shopify.railgun",
   pool: Ecto.Adapters.SQL.Sandbox
