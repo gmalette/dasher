@@ -3,10 +3,21 @@ defmodule Dasher.MetricTest do
 
   alias Dasher.Metrics
 
-  setup do
-    {:ok, pid} = Dasher.Metrics.start_link
+  defmodule Forwarder do
+    use GenEvent
 
-    {:ok, pid: pid}
+    def handle_event(event, parent) do
+      send parent, event
+      {:ok, parent}
+    end
+  end
+
+  setup do
+    {:ok, events} = GenEvent.start_link
+    {:ok, pid} = Dasher.Metrics.start_link(events)
+    GenEvent.add_mon_handler(events, Forwarder, self())
+
+    {:ok, pid: pid, events: events}
   end
 
   test "reading unknown metric returns an error", %{pid: pid} do
@@ -49,5 +60,10 @@ defmodule Dasher.MetricTest do
 
   test "can't add unknown values", %{pid: pid} do
     assert :error == Dasher.Metrics.add(pid, "toto", :blog, "my personal blog")
+  end
+
+  test "adding a metric sends a :refresh event", %{pid: pid} do
+    assert :ok == Dasher.Metrics.add(pid, "toto", :value, 42)
+    assert_received {:refresh, "toto"}
   end
 end

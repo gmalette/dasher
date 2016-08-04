@@ -3,8 +3,8 @@ defmodule Dasher.Metrics do
 
   @table_name :dasher_data
 
-  def start_link do
-    GenServer.start_link(__MODULE__, {})
+  def start_link(events) do
+    GenServer.start_link(__MODULE__, {events})
   end
 
   def add(pid, metric_name, data_type, data) do
@@ -17,22 +17,23 @@ defmodule Dasher.Metrics do
 
   # callbacks
 
-  def init({}) do
+  def init({events}) do
     table = :ets.new(@table_name, [:named_table])
-    {:ok, {table}}
+    {:ok, %{table: table, events: events}}
   end
 
-  def handle_call({:add, metric_name, data_type, data}, _from, {table} = state) do
+  def handle_call({:add, metric_name, data_type, data}, _from, %{table: table, events: events} = state) do
     case validate_data_type(data_type, data) do
       :ok ->
         :ets.insert(table, {metric_name, {data_type, data}})
+        GenEvent.sync_notify(events, {:refresh, metric_name})
         {:reply, :ok, state}
       :error ->
         {:reply, :error, state}
     end
   end
 
-  def handle_call({:get, metric_name}, _from, {table} = state) do
+  def handle_call({:get, metric_name}, _from, %{table: table} = state) do
     ret = case :ets.lookup(table, metric_name) do
       [{^metric_name, data}] -> {:ok, data}
       [] -> :error
