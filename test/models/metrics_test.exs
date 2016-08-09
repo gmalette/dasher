@@ -7,7 +7,7 @@ defmodule Dasher.MetricTest do
     use GenEvent
 
     def handle_event(event, parent) do
-      send parent, event
+      send(parent, event)
       {:ok, parent}
     end
   end
@@ -29,6 +29,15 @@ defmodule Dasher.MetricTest do
     assert {:ok, {:value, 42}} == Metrics.get(pid, "toto")
   end
 
+  test "can add gauges", %{pid: pid} do
+    assert :ok == Metrics.add(pid, "toto", :gauge, 42)
+    assert {:ok, {:gauge, 42}} == Metrics.get(pid, "toto")
+  end
+
+  test "can't add invalid gauges", %{pid: pid} do
+    assert :error == Metrics.add(pid, "toto", :gauge, "abc")
+  end
+
   test "can add histograms", %{pid: pid} do
     values = [
       %{x: 0, y: 10},
@@ -48,6 +57,11 @@ defmodule Dasher.MetricTest do
 
     values = [
       %{x: 0, y: "a"},
+    ]
+    assert :error == Metrics.add(pid, "toto", :histogram, values)
+
+    values = [
+      %{x: 0, y: 10, z: 10},
     ]
     assert :error == Metrics.add(pid, "toto", :histogram, values)
   end

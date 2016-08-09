@@ -55,6 +55,10 @@ defmodule Dasher.Metrics do
     end
   end
 
+  def validate_data_type(:gauge, data) when is_number(data) do
+    :ok
+  end
+
   def validate_data_type(:value, data) do
     :ok
   end
