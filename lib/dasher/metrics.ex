@@ -26,7 +26,7 @@ defmodule Dasher.Metrics do
     case validate_data_type(data_type, data) do
       :ok ->
         :ets.insert(table, {metric_name, {data_type, data}})
-        GenEvent.sync_notify(events, {:refresh, metric_name})
+        GenEvent.sync_notify(events, {:refresh, %{name: metric_name, value: data}})
         {:reply, :ok, state}
       :error ->
         {:reply, :error, state}
@@ -59,11 +59,11 @@ defmodule Dasher.Metrics do
     :ok
   end
 
-  def validate_data_type(:value, data) do
+  def validate_data_type(:value, _) do
     :ok
   end
 
-  def validate_data_type(:arbitrary, data) do
+  def validate_data_type(:arbitrary, _) do
     :ok
   end
 

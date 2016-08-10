@@ -78,6 +78,6 @@ defmodule Dasher.MetricTest do
 
   test "adding a metric sends a :refresh event", %{pid: pid} do
     assert :ok == Metrics.add(pid, "toto", :value, 42)
-    assert_received {:refresh, "toto"}
+    assert_received {:refresh, %{name: "toto", value: 42}}
   end
 end
