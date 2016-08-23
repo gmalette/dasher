@@ -12,7 +12,7 @@ defmodule Dasher.MetricEventHandlerTest do
     {:ok, events: events, socket: socket}
   end
 
-  test "handles :refresh events by broadcasting to the metrics channel", %{events: events, socket: socket} do
+  test "handles :refresh events by broadcasting to the metrics channel", %{events: events, socket: _} do
     GenEvent.sync_notify(events, {:refresh, %{name: "toto", value: 42}})
     assert_broadcast "refresh", %{name: "toto", value: 42}
   end

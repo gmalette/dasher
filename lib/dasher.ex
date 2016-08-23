@@ -14,12 +14,18 @@ defmodule Dasher do
       supervisor(Dasher.Endpoint, []),
       # Start your own worker by calling: Dasher.Worker.start_link(arg1, arg2, arg3)
       # worker(Dasher.Worker, [arg1, arg2, arg3]),
+      Dasher.MetricsEventHandler.child_spec,
+      worker(Dasher.Metrics, []),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Dasher.Supervisor]
-    Supervisor.start_link(children, opts)
+    ret = with {:ok, pid} <- Supervisor.start_link(children, opts),
+         :ok <- Dasher.MetricsEventHandler.register,
+         do: {:ok, pid}
+
+    ret
   end
 
   # Tell Phoenix to update the endpoint configuration

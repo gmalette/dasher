@@ -1,32 +1,33 @@
 defmodule Dasher.Metrics do
+  require Logger
   use GenServer
 
   @table_name :dasher_data
 
-  def start_link(events) do
-    GenServer.start_link(__MODULE__, {events})
+  def start_link do
+    GenServer.start_link(__MODULE__, {}, [name: __MODULE__])
   end
 
-  def add(pid, metric_name, data_type, data) do
-    GenServer.call(pid, {:add, metric_name, data_type, data})
+  def add(metric_name, data_type, data) do
+    GenServer.call(__MODULE__, {:add, metric_name, data_type, data})
   end
 
-  def get(pid, metric_name) do
-    GenServer.call(pid, {:get, metric_name})
+  def get(metric_name) do
+    GenServer.call(__MODULE__, {:get, metric_name})
   end
 
   # callbacks
 
-  def init({events}) do
+  def init({}) do
     table = :ets.new(@table_name, [:named_table])
-    {:ok, %{table: table, events: events}}
+    {:ok, %{table: table}}
   end
 
-  def handle_call({:add, metric_name, data_type, data}, _from, %{table: table, events: events} = state) do
+  def handle_call({:add, metric_name, data_type, data}, _from, %{table: table} = state) do
     case validate_data_type(data_type, data) do
       :ok ->
         :ets.insert(table, {metric_name, {data_type, data}})
-        GenEvent.sync_notify(events, {:refresh, %{name: metric_name, value: data}})
+        Dasher.MetricsEventHandler.update({:refresh, %{name: metric_name, value: data}})
         {:reply, :ok, state}
       :error ->
         {:reply, :error, state}
